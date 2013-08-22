@@ -52,9 +52,11 @@ add_subdirectory(Common)
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux") # OR FreeBSD OR MacOS X OR Windows
   if (Qt5Enabled)
     qt5_add_resources(RsrcSources DesktopQt5/Resource.qrc)
+    qt5_wrap_cpp(MocSources ${CMAKE_SOURCE_DIR}/include/OsmAndConfig.h)
 
     add_executable(OsmAnd_native
       DesktopQt5/main.cpp
+      ${MocSources}
       ${RsrcSources}
     )
 

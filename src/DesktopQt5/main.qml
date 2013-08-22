@@ -38,6 +38,7 @@ ApplicationWindow {
   }
   
   MapView {
+    mapViewName: "mapView"
     anchors.fill: parent
   }
 }

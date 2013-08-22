@@ -2,6 +2,8 @@ import QtQuick 2.0
 import MapComponent 1.0
 
 Item {
+  property alias mapViewName: map.objectName
+  
   MapComponent {
     id: map
     anchors.fill: parent

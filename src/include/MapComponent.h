@@ -1,3 +1,4 @@
+#include "OsmAndConfig.h"
 #include <QTime>
 #include <QtQuick/QQuickItem>
 #include <OsmAndCore/Map/IMapRenderer.h>
@@ -6,8 +7,8 @@ class QOpenGLContext;
 
 class MapComponent : public QQuickItem {
   Q_OBJECT
-  
-private:
+
+  OsmAndConfig *_config;
   bool _initialized;
   std::shared_ptr<OsmAnd::IMapRenderer> _renderer;
   QOpenGLContext *_context;
@@ -15,28 +16,18 @@ private:
   double _dotsPerCm;
   int _lastX;
   int _lastY;
-  
-  double _distanceToFirstCP;
-  double _distance;
-  double _speed;
-  double _altitude;
-  QTime _timeToDestination;
-  
+
   Q_PROPERTY(double scale READ getScale);
   
-  Q_PROPERTY(double distanceToFirstCP READ distanceToFirstCP WRITE updateDistanceToFirstCP);
-  Q_PROPERTY(double distance READ distance WRITE updateDistance);
-  Q_PROPERTY(double speed READ speed WRITE updateSpeed);
-  Q_PROPERTY(double altitude READ altitude WRITE updateAltitude);
-  Q_PROPERTY(QTime timeToDestination READ timeToDestination WRITE updateTimeToDestination);
+  Q_PROPERTY_AUTO(double, distanceToFirstCP);
+  Q_PROPERTY_AUTO(double, distance);
+  Q_PROPERTY_AUTO(double, speed);
+  Q_PROPERTY_AUTO(double, altitude);
+  Q_PROPERTY_AUTO(QTime, timeToDestination);
   
 public:
   MapComponent();
-  double distanceToFirstCP() { return _distanceToFirstCP; }
-  double distance() { return _distance; }
-  double speed() { return _speed; }
-  double altitude() { return _altitude; }
-  QTime timeToDestination() { return _timeToDestination; }
+  void setConfig(OsmAndConfig *config);
   
   double getScale();
 
@@ -51,15 +42,8 @@ signals:
 public slots:
   void paint();
   void sync();
-
   void zoomIn();
   void zoomOut();
-  
-  void updateDistanceToFirstCP(double newValue) { _distanceToFirstCP = newValue; }  
-  void updateDistance(double newValue) { _distance = newValue; }
-  void updateSpeed(double newValue) { _speed = newValue; }
-  void updateAltitude(double newValue) { _altitude = newValue; }
-  void updateTimeToDestination(QTime newValue) { _timeToDestination = newValue; }
 
 private slots:
   void handleWindowChanged(QQuickWindow *win);  

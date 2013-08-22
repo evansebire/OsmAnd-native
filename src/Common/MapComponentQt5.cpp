@@ -18,18 +18,30 @@ static QOpenGLContext *createContext()
   return _context;
 }
 
-MapComponent::MapComponent() : _initialized(false), _lastX(0), _lastY(0),
-  _distanceToFirstCP(0.0),
-  _distance(0.0),
-  _speed(0.0),
-  _altitude(0.0),
-  _timeToDestination(QTime(0, 0))
+MapComponent::MapComponent() : _config(0),
+  _initialized(false), _lastX(0), _lastY(0),
+  distanceToFirstCP(0.0),
+  distance(0.0),
+  speed(0.0),
+  altitude(0.0),
+  timeToDestination(QTime(0, 0))
 {
   setAcceptedMouseButtons(Qt::LeftButton);
   _renderer = OsmAnd::createAtlasMapRenderer_OpenGL();
   
   connect(this, SIGNAL(windowChanged(QQuickWindow*)),
           this, SLOT(handleWindowChanged(QQuickWindow*)));
+}
+
+
+void MapComponent::setConfig(OsmAndConfig *config)
+{
+  _config = config;
+  _renderer->setTarget(OsmAnd::PointI(config->opData.X, config->opData.Y));
+  _renderer->setZoom(config->opData.Zoom);
+  _renderer->setAzimuth(config->opData.Azimuth);
+  _renderer->setElevationAngle(config->opData.ElevationAngle, true);
+  emit scaleChanged();
 }
 
 
@@ -47,12 +59,11 @@ void MapComponent::handleWindowChanged(QQuickWindow *win)
     _renderer->setRasterLayerProvider(OsmAnd::BaseLayer, tileProvider);
     _renderer->setRasterLayerOpacity(OsmAnd::BaseLayer, 0.5f);
     _renderer->setFogColor(OsmAnd::FColorRGB(1.0f, 1.0f, 1.0f));
-    _renderer->setTarget(OsmAnd::PointI(OsmAnd::Utilities::get31TileNumberX(30.392386),
-                                        OsmAnd::Utilities::get31TileNumberY(59.964222)));
-    _renderer->setZoom(12.5f);
+    _renderer->setTarget(OsmAnd::PointI(0, 0));
+    _renderer->setZoom(0.0f);
     _renderer->setAzimuth(0.0f);
-    _renderer->setElevationAngle(90.0f);
-
+    _renderer->setElevationAngle(90.0f);  
+    
     OsmAnd::MapRendererSetupOptions options;
     options.backgroundWorker.enabled = false;
     options.frameRequestCallback = [win]() { QMetaObject::invokeMethod(win, "update"); };
@@ -121,6 +132,12 @@ void MapComponent::mouseMoveEvent(QMouseEvent *event)
     
     _lastX = event->x();
     _lastY = event->y();
+    
+    if (_config) {
+      _config->opData.X = _renderer->state.target31.x;
+      _config->opData.Y = _renderer->state.target31.y;
+    }
+    
     emit scaleChanged();
   }
 }
@@ -136,6 +153,8 @@ void MapComponent::wheelEvent(QWheelEvent *event)
 {
   float step = event->delta() > 0 ? 0.1f : -0.1f;
   _renderer->setZoom(_renderer->state.requestedZoom + step, true);
+  if (_config)
+    _config->opData.Zoom = _renderer->state.requestedZoom;
   emit scaleChanged();
 }
 
@@ -155,11 +174,15 @@ double MapComponent::getScale()
 void MapComponent::zoomIn()
 {
   _renderer->setZoom(_renderer->state.requestedZoom + 1.0f, true);
+  if (_config)
+    _config->opData.Zoom = _renderer->state.requestedZoom;
   emit scaleChanged();
 }
 
 void MapComponent::zoomOut()
 {
   _renderer->setZoom(_renderer->state.requestedZoom - 1.0f, true);
+  if (_config)
+    _config->opData.Zoom = _renderer->state.requestedZoom;
   emit scaleChanged();
 }
