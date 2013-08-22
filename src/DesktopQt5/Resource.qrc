@@ -1,0 +1,7 @@
+<RCC>
+  <qresource prefix="/OsmAnd">
+    <file>main.qml</file>
+    <file alias="QML.MapView">../QML.MapView</file>
+    <file alias="QML.MapView/images">../QML.MapView/images</file>
+  </qresource>
+</RCC>
