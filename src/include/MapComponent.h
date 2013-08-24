@@ -8,8 +8,8 @@ class QOpenGLContext;
 class MapComponent : public QQuickItem {
   Q_OBJECT
 
-  OsmAndConfig *_config;
   bool _initialized;
+  OsmAndCfgMap *_config;
   std::shared_ptr<OsmAnd::IMapRenderer> _renderer;
   QOpenGLContext *_context;
   
@@ -17,17 +17,26 @@ class MapComponent : public QQuickItem {
   int _lastX;
   int _lastY;
 
-  Q_PROPERTY(double scale READ getScale);
+signals:
+  void distanceToFirstCPChanged(double);
+  void distanceChanged(double);
+  void speedChanged(double);
+  void altitudeChanged(double);
+  void timeToDestinationChanged(QTime);
   
-  Q_PROPERTY_AUTO(double, distanceToFirstCP);
-  Q_PROPERTY_AUTO(double, distance);
-  Q_PROPERTY_AUTO(double, speed);
-  Q_PROPERTY_AUTO(double, altitude);
-  Q_PROPERTY_AUTO(QTime, timeToDestination);
+public:
+  Q_PROPERTY(double scale READ getScale NOTIFY scaleChanged);
+  Q_PROPERTY(OsmAndCfgMap* config READ getConfig WRITE setConfig);
+  Q_PROPERTY_AUTO_NOTIFY(double, distanceToFirstCP);
+  Q_PROPERTY_AUTO_NOTIFY(double, distance);
+  Q_PROPERTY_AUTO_NOTIFY(double, speed);
+  Q_PROPERTY_AUTO_NOTIFY(double, altitude);
+  Q_PROPERTY_AUTO_NOTIFY(QTime, timeToDestination);
   
 public:
   MapComponent();
-  void setConfig(OsmAndConfig *config);
+  OsmAndCfgMap *getConfig() { return _config; }
+  void setConfig(OsmAndCfgMap *config);
   
   double getScale();
 
@@ -41,7 +50,8 @@ signals:
   
 public slots:
   void paint();
-  void sync();
+  
+  void updateCfg();
   void zoomIn();
   void zoomOut();
 

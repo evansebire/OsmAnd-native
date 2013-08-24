@@ -34,14 +34,11 @@ MapComponent::MapComponent() : _config(0),
 }
 
 
-void MapComponent::setConfig(OsmAndConfig *config)
+void MapComponent::setConfig(OsmAndCfgMap *config)
 {
   _config = config;
-  _renderer->setTarget(OsmAnd::PointI(config->opData.X, config->opData.Y));
-  _renderer->setZoom(config->opData.Zoom);
-  _renderer->setAzimuth(config->opData.Azimuth);
-  _renderer->setElevationAngle(config->opData.ElevationAngle, true);
-  emit scaleChanged();
+  updateCfg();
+  connect(_config, SIGNAL(updated()), this, SLOT(updateCfg()));
 }
 
 
@@ -134,8 +131,8 @@ void MapComponent::mouseMoveEvent(QMouseEvent *event)
     _lastY = event->y();
     
     if (_config) {
-      _config->opData.X = _renderer->state.target31.x;
-      _config->opData.Y = _renderer->state.target31.y;
+      _config->X = _renderer->state.target31.x;
+      _config->Y = _renderer->state.target31.y;
     }
     
     emit scaleChanged();
@@ -154,13 +151,10 @@ void MapComponent::wheelEvent(QWheelEvent *event)
   float step = event->delta() > 0 ? 0.1f : -0.1f;
   _renderer->setZoom(_renderer->state.requestedZoom + step, true);
   if (_config)
-    _config->opData.Zoom = _renderer->state.requestedZoom;
+    _config->Zoom = _renderer->state.requestedZoom;
   emit scaleChanged();
 }
 
-void MapComponent::sync()
-{
-}
 
 double MapComponent::getScale()
 {
@@ -171,11 +165,21 @@ double MapComponent::getScale()
 }
 
 
+void MapComponent::updateCfg()
+{
+  _renderer->setTarget(OsmAnd::PointI(_config->X, _config->Y));
+  _renderer->setZoom(_config->Zoom);
+  _renderer->setAzimuth(_config->Azimuth);
+  _renderer->setElevationAngle(_config->ElevationAngle, true);
+  emit scaleChanged();
+}
+
+
 void MapComponent::zoomIn()
 {
   _renderer->setZoom(_renderer->state.requestedZoom + 1.0f, true);
   if (_config)
-    _config->opData.Zoom = _renderer->state.requestedZoom;
+    _config->Zoom = _renderer->state.requestedZoom;
   emit scaleChanged();
 }
 
@@ -183,6 +187,6 @@ void MapComponent::zoomOut()
 {
   _renderer->setZoom(_renderer->state.requestedZoom - 1.0f, true);
   if (_config)
-    _config->opData.Zoom = _renderer->state.requestedZoom;
+    _config->Zoom = _renderer->state.requestedZoom;
   emit scaleChanged();
 }

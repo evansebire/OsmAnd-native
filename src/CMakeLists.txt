@@ -67,6 +67,7 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux") # OR FreeBSD OR MacOS X OR Windows
 
     qt5_use_modules(OsmAnd_native
       Core
+      Widgets
       Sql
       Quick
     )

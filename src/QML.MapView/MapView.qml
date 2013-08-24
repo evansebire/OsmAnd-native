@@ -1,13 +1,19 @@
 import QtQuick 2.0
 import MapComponent 1.0
 
+import OsmAndCfgInterface 1.0
+import OsmAndCfgMap 1.0
+
 Item {
-  property alias mapViewName: map.objectName
+  id: mapView
+  property OsmAndCfgInterface interfaceCfg
+  property alias mapCfg: map.config
+  
+  signal mapViewConfigure
   
   MapComponent {
     id: map
     anchors.fill: parent
-    onScaleChanged: scaleText.text = scaleFormat(scale)
   }
   
   Row {
@@ -21,8 +27,8 @@ Item {
     id: ctrlRow
     anchors.right: parent.right
     anchors.top: parent.top
-    MVButton { image: "map_config"}
-    MVButton { image: "la_backtoloc_disabled"}
+    MVButton { image: "map_config"; visible: interfaceCfg.CfgButtonVisible; onClicked: mapView.mapViewConfigure()}
+    MVButton { image: "la_backtoloc_disabled"; visible: interfaceCfg.CurrentPosButtonVisible}
   }
   
   Column {

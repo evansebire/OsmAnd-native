@@ -1,2 +1,3 @@
 MapView MapView.qml
 MVButton MVButton.qml
+InterfaceConfig InterfaceConfig.qml

@@ -5,12 +5,17 @@
 class QFile;
 
 
-#define Q_PROPERTY_AUTO(type, name) \
+#define Q_PROPERTY_AUTO(type, name)\
 type name; \
 type get##name() { return name; } \
 void set##name(type value) { name = value; } \
 Q_PROPERTY(type name READ get##name WRITE set##name);
 
+#define Q_PROPERTY_AUTO_NOTIFY(type, name)\
+type name; \
+type get##name() { return name; } \
+void set##name(type value) { name = value; emit name##Changed(value); } \
+Q_PROPERTY(type name READ get##name WRITE set##name NOTIFY name##Changed);
 
 class Serializer : public QObject {
   Q_OBJECT
@@ -19,18 +24,25 @@ protected:
   QFile *_file;
   
 public:
-  Serializer(QString file);
-  virtual void load() = 0;
+  Serializer() : _file(0) {}
   virtual ~Serializer();
   
-public slots:
+  // NOTE: May be possible to do this using QML/Javascript only?
+  Q_INVOKABLE QString configDir();
+  
+  Q_INVOKABLE void linkWith(QString file);
+  
+public slots:  
+  virtual void load() = 0;
   virtual void dump() = 0;
+  
+signals:
+  void updated();
 };
 
 
 class BinarySerializer : public Serializer {
 public:
-  BinarySerializer(QString file) : Serializer(file) {}
   virtual void load();
   virtual void dump();
 };
@@ -38,7 +50,6 @@ public:
 
 class XmlSerializer : public Serializer {
 public:
-  XmlSerializer(QString file) : Serializer(file) {}
   virtual void load();
   virtual void dump();
 };
@@ -47,3 +58,4 @@ public:
   
 
 #endif //__XMLSERIALIZER_H_
+

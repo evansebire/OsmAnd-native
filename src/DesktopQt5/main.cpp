@@ -1,32 +1,18 @@
 #include <QDir>
-#include <QGuiApplication>
+#include <QtWidgets/QApplication>
 #include <QQmlApplicationEngine>
-#include <QTimer>
 
 #include "MapComponent.h"
 #include "OsmAndConfig.h"
 
 int main(int argc, char **argv)
 {
-  OsmAndConfig config(QDir::homePath() + "/.OsmAnd.xml",
-                      QDir::homePath() + "/.OsmAndOp.bin");
-
-  QGuiApplication app(argc, argv);
+  QApplication app(argc, argv);
   OsmAnd::InitializeCore();
- 
-  qmlRegisterType<MapComponent>("MapComponent", 1, 0, "MapComponent");
-  QQmlApplicationEngine engine(QUrl("qrc:/OsmAnd/main.qml"));
-  for (auto object: engine.rootObjects()) {
-    MapComponent *mapComponent = object->findChild<MapComponent*>("mapView");
-    if (mapComponent) {
-      mapComponent->setConfig(&config);
-      break;
-    }
-  }
 
-  QTimer *cfgSaveTimer = new QTimer();
-  QObject::connect(cfgSaveTimer, SIGNAL(timeout()), &config.opData, SLOT(dump()));
-  cfgSaveTimer->start(1000);
-  
+  qmlRegisterType<MapComponent>("MapComponent", 1, 0, "MapComponent");
+  qmlRegisterType<OsmAndCfgMap>("OsmAndCfgMap", 1, 0, "OsmAndCfgMap");
+  qmlRegisterType<OsmAndCfgInterface>("OsmAndCfgInterface", 1, 0, "OsmAndCfgInterface");
+  QQmlApplicationEngine engine(QUrl("qrc:/OsmAnd/main.qml"));
   app.exec();
 }

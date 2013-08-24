@@ -3,7 +3,7 @@
 
 #include "Serializer.h"
 
-struct OsmAndConfigOp : public BinarySerializer {
+struct OsmAndCfgMap : public BinarySerializer {
   Q_OBJECT
   
 public:  
@@ -12,8 +12,8 @@ public:
   Q_PROPERTY_AUTO(float, Zoom);
   Q_PROPERTY_AUTO(float, Azimuth);
   Q_PROPERTY_AUTO(float, ElevationAngle);
-
-  OsmAndConfigOp(QString file) : BinarySerializer(file),
+  
+  OsmAndCfgMap() : BinarySerializer(),
     X(1255039468),
     Y(624055097),
     Zoom(7.5f),
@@ -21,17 +21,20 @@ public:
     ElevationAngle(90.0f) {}
 };
 
-struct OsmAndConfig : public XmlSerializer {
+struct OsmAndCfgInterface : public XmlSerializer {
   Q_OBJECT
   
-public:
-  OsmAndConfigOp opData;
+signals:
+  void CfgButtonVisibleChanged(bool);
+  void CurrentPosButtonVisibleChanged(bool);
   
-  OsmAndConfig(QString file, QString opFile) :
-    XmlSerializer(file), opData(opFile) {
-      opData.load();
-      load();
-    }
+public:
+  Q_PROPERTY_AUTO_NOTIFY(bool, CfgButtonVisible);
+  Q_PROPERTY_AUTO_NOTIFY(bool, CurrentPosButtonVisible);
+  
+  OsmAndCfgInterface() : XmlSerializer(),
+    CfgButtonVisible(true),
+    CurrentPosButtonVisible(true) {}
 };
 
 #endif //__OSMANDCONFIG_H_

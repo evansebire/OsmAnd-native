@@ -1,19 +1,30 @@
 #include "Serializer.h"
 #include <QDataStream>
+#include <QDir>
 #include <QFile>
 #include <QMetaProperty>
-
-
-Serializer::Serializer(QString file)
-{
-  _file = new QFile(file);
-  _file->open(QFile::OpenModeFlag::ReadWrite);
-}
 
 
 Serializer::~Serializer()
 {
   delete _file;
+}
+
+QString Serializer::configDir()
+{
+  // NOTE: only for desktop platforms
+  return QDir::homePath();
+}
+
+
+void Serializer::linkWith(QString file)
+{
+  if (_file)
+    delete _file;
+  
+  _file = new QFile(file);
+  _file->open(QIODevice::ReadWrite);
+  load();
 }
 
 
@@ -29,7 +40,9 @@ void BinarySerializer::load()
     QVariant value;
     stream >> value;
     property.write(this, value);
-  }  
+  }
+  
+  emit updated();
 }
 
 void BinarySerializer::dump()
