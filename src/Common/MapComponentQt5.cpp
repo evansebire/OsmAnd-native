@@ -53,8 +53,8 @@ void MapComponent::handleWindowChanged(QQuickWindow *win)
 
     auto tileProvider = OsmAnd::OnlineMapRasterTileProvider::createCycleMapProvider();
     static_cast<OsmAnd::OnlineMapRasterTileProvider*>(tileProvider.get())->setLocalCachePath(QDir::current());
-    _renderer->setRasterLayerProvider(OsmAnd::BaseLayer, tileProvider);
-    _renderer->setRasterLayerOpacity(OsmAnd::BaseLayer, 0.5f);
+    _renderer->setRasterLayerProvider(OsmAnd::RasterMapLayerId::BaseLayer, tileProvider);
+    _renderer->setRasterLayerOpacity(OsmAnd::RasterMapLayerId::BaseLayer, 0.5f);
     _renderer->setFogColor(OsmAnd::FColorRGB(1.0f, 1.0f, 1.0f));
     _renderer->setTarget(OsmAnd::PointI(0, 0));
     _renderer->setZoom(0.0f);
@@ -95,9 +95,9 @@ void MapComponent::paint()
   _renderer->setWindowSize(OsmAnd::PointI(width(), height()));
   _renderer->setViewport(viewport);  
 
+  if(_renderer->prepareFrame())
+    _renderer->renderFrame();
   _renderer->processRendering();
-  _renderer->renderFrame();
-  _renderer->postprocessRendering();
   
   savedContext->makeCurrent(window());
 }
