@@ -43,12 +43,12 @@ ApplicationWindow {
 
   OsmAndCfgInterface {
     id: interfaceCfg
-    Component.onCompleted: linkWith(configDir() + "/.OsmAndInterface.cfg")
+    Component.onCompleted: linkWith(appRootDirectory() + "/.OsmAndInterface.cfg")
   }
   
   OsmAndCfgMap {
     id: mapCfg 
-    Component.onCompleted: linkWith(configDir() + "/.OsmAndMap.cfg")
+    Component.onCompleted: linkWith(appRootDirectory() + "/.OsmAndMap.cfg")
   }
   
   Timer {

@@ -28,7 +28,7 @@ public:
   virtual ~Serializer();
   
   // NOTE: May be possible to do this using QML/Javascript only?
-  Q_INVOKABLE QString configDir();
+  Q_INVOKABLE static QString appRootDirectory();
   
   Q_INVOKABLE void linkWith(QString file);
   

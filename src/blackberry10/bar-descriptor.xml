@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<qnx xmlns="http://www.qnx.com/schemas/application/1.0">
+    <id>com.osmand.native</id>
+    <name>OsmAnd-native</name>
+    <versionNumber>1.0.0</versionNumber>
+    <description>DESCRIPTION</description>
+    <initialWindow>
+        <autoOrients>true</autoOrients>
+        <systemChrome>none</systemChrome>
+        <transparent>false</transparent>
+    </initialWindow>
+    <author>Ivan K.</author>
+    <configuration name="Device-Debug">
+        <platformArchitecture>armle-v7</platformArchitecture>
+    </configuration>
+    <configuration name="Device-Release">
+        <platformArchitecture>armle-v7</platformArchitecture>
+    </configuration>
+    <configuration name="Device-Coverage">
+        <platformArchitecture>armle-v7</platformArchitecture>
+    </configuration>
+    <configuration name="Simulator-Debug">
+        <platformArchitecture>x86</platformArchitecture>
+    </configuration>
+    <configuration name="Simulator-Profile">
+        <platformArchitecture>x86</platformArchitecture>
+    </configuration>
+    <configuration name="Simulator-Coverage">
+        <platformArchitecture>x86</platformArchitecture>
+    </configuration>
+    <copyright>COPYRIGHT</copyright>
+    <env value="app/native/imports:/accounts/devuser/qt5/qml/" var="QML2_IMPORT_PATH"/>
+    <env value="app/native/plugins:/accounts/devuser/qt5/plugins/" var="QT_PLUGIN_PATH"/>
+    <env value="app/native/lib:/accounts/devuser/qt5/lib/" var="LD_LIBRARY_PATH"/>
+    <arg>-platform</arg>
+    <arg>qnx</arg>
+    <action system="true">run_native</action>
+    <asset path="OsmAnd-native" type="Qnx/Elf" entry="true">OsmAnd-native</asset>
+    <asset path="%SRC_DIR%/main.qml">qml/main.qml</asset>
+    <asset path="%SRC_DIR%/../QML.MapView">qml/QML.MapView</asset>
+</qnx>

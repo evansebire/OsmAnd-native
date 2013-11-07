@@ -1,4 +1,3 @@
-#include <QDir>
 #include <QtWidgets/QApplication>
 #include <QQmlApplicationEngine>
 

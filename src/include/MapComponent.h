@@ -4,6 +4,7 @@
 #include <OsmAndCore/Map/IMapRenderer.h>
 
 class QOpenGLContext;
+class GestureRecognizer;
 
 class MapComponent : public QQuickItem {
   Q_OBJECT
@@ -12,10 +13,8 @@ class MapComponent : public QQuickItem {
   OsmAndCfgMap *_config;
   std::shared_ptr<OsmAnd::IMapRenderer> _renderer;
   QOpenGLContext *_context;
-  
+  GestureRecognizer *_recognizer;
   double _dotsPerCm;
-  int _lastX;
-  int _lastY;
 
 signals:
   void distanceToFirstCPChanged(double);
@@ -41,6 +40,7 @@ public:
   double getScale();
 
 protected:
+  void touchEvent(QTouchEvent *event);  
   void mouseMoveEvent(QMouseEvent *event);
   void mousePressEvent(QMouseEvent *event);
   void wheelEvent(QWheelEvent *event);
@@ -49,6 +49,8 @@ signals:
   void scaleChanged();
   
 public slots:
+  void pinch(int deltaX, int deltaY, double scale, double angleChanged);
+  void drag3f(int delta);  
   void paint();
   
   void updateCfg();

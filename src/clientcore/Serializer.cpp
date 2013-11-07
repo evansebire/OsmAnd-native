@@ -10,10 +10,18 @@ Serializer::~Serializer()
   delete _file;
 }
 
-QString Serializer::configDir()
+QString Serializer::appRootDirectory()
 {
   // NOTE: only for desktop platforms
+#ifdef OSMAND_TARGET_OS_qnx
   return QDir::homePath();
+#else
+  QDir directory(QDir::home());
+  if (!directory.exists(".osmand"))
+    directory.mkdir(".osmand");
+  directory.cd(".osmand");
+  return directory.absolutePath();
+#endif
 }
 
 
