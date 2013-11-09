@@ -1,3 +1,8 @@
-MapView MapView.qml
-MVButton MVButton.qml
+Button Button.qml
+CheckBox CheckBox.qml
 InterfaceConfig InterfaceConfig.qml
+Label Label.qml
+MapView MapView.qml
+Page Page.qml
+PageStack PageStack.qml
+ToolButton ToolButton.qml
