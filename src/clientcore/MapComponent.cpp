@@ -8,7 +8,6 @@
 #include <OsmAndCore/Utilities.h>
 #include "GestureRecognizer.h"
 
-
 MapComponent::MapComponent() : _initialized(false),
   _config(0),
   distanceToFirstCP(0.0),
@@ -40,7 +39,7 @@ MapComponent::MapComponent() : _initialized(false),
   connect(_recognizer, SIGNAL(pinch(int,int,double,double)),
           this, SLOT(pinch(int,int,double,double)));
   connect(_recognizer, SIGNAL(drag3f(int)),
-          this, SLOT(drag3f(int)));  
+          this, SLOT(drag3f(int)));
 }
 
 
@@ -58,6 +57,8 @@ void MapComponent::handleWindowChanged(QQuickWindow *win)
     _dotsPerCm = win->screen()->logicalDotsPerInch() / 2.54;
     
     connect(win, SIGNAL(beforeRendering()), this, SLOT(paint()), Qt::DirectConnection);
+    connect(win, SIGNAL(widthChanged(int)), this, SLOT(resized()), Qt::DirectConnection);
+    connect(win, SIGNAL(heightChanged(int)), this, SLOT(resized()), Qt::DirectConnection);
     win->setClearBeforeRendering(false);
     
     OsmAnd::MapRendererSetupOptions options;
@@ -84,11 +85,32 @@ void MapComponent::paint()
   }
   
   _context->makeCurrent(window());
+#elif defined(OSMAND_OPENGLES2_RENDERER_SUPPORTED)
+  EGLDisplay currentDisplay = eglGetCurrentDisplay();
+  EGLContext savedContext = eglGetCurrentContext();
+  EGLSurface readSurface = eglGetCurrentSurface(EGL_READ);
+  EGLSurface drawSurface = eglGetCurrentSurface(EGL_DRAW);
+
+  if (!_context) {
+    EGLint numCfg = 0;
+    EGLConfig eglCfg;
+    EGLint eglAttrs[]= {
+      EGL_CONFIG_ID, 0,
+      EGL_NONE
+    };
+    EGLint ctxAttrs[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
+    eglQueryContext(currentDisplay, savedContext, EGL_CONFIG_ID, &eglAttrs[1]);
+    eglChooseConfig(currentDisplay, eglAttrs, &eglCfg, 1, &numCfg);
+    _context = eglCreateContext(currentDisplay, eglCfg, EGL_NO_CONTEXT, ctxAttrs);
+  }
+  glClearColor(1.0, 0.0, 0.0, 0.0);
+  glClear(GL_COLOR_BUFFER_BIT);
+  eglMakeCurrent(currentDisplay, drawSurface, readSurface, _context);
 #endif
 
   if (!_initialized)
     _initialized = _renderer->initializeRendering();
-  
+
   OsmAnd::AreaI viewport;
   viewport.top = y();
   viewport.left = x();
@@ -100,12 +122,17 @@ void MapComponent::paint()
   if(_renderer->prepareFrame())
     _renderer->renderFrame();
   _renderer->processRendering();
-
 #if defined(OSMAND_OPENGL_RENDERER_SUPPORTED)
   savedContext->makeCurrent(window());
 #elif defined(OSMAND_OPENGLES2_RENDERER_SUPPORTED)
-  glActiveTexture(GL_TEXTURE0);
+  eglMakeCurrent(currentDisplay, drawSurface, readSurface, savedContext);
 #endif
+}
+
+void MapComponent::resized()
+{
+  // force map repaint
+  _renderer->setTarget(_renderer->state.target31, true);
 }
 
 
@@ -174,7 +201,6 @@ void MapComponent::wheelEvent(QWheelEvent *event)
   if (!_recognizer->process(event))
     QQuickItem::wheelEvent(event);
 }
-
 
 double MapComponent::getScale()
 {

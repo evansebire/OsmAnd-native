@@ -15,13 +15,22 @@ HEADERS += \
   ../include/OsmAndConfig.h \
   ../include/Serializer.h
 
-
-debug {
-  LIBS += -L$(OSMAND_ROOT_DIRECTORY)/binaries/qnx/arm/Debug
+blackberry-armv7le-qcc {
+  CONFIG(debug, debug|release) {
+    LIBS += -L$(OSMAND_ROOT_DIRECTORY)/binaries/qnx/arm/Debug
+  } else {
+    LIBS += -L$(OSMAND_ROOT_DIRECTORY)/binaries/qnx/arm/Release
+  }
 }
 
-release {
-  LIBS += -L$(OSMAND_ROOT_DIRECTORY)/binaries/qnx/arm/Release
+blackberry-x86-qcc {
+  QMAKE_CFLAGS += -Wc,-march=i686
+  QMAKE_CXXFLAGS += -Wc,-march=i686
+  CONFIG(debug, debug|release) {
+    LIBS += -L$(OSMAND_ROOT_DIRECTORY)/binaries/qnx/x86/Debug
+  } else {
+    LIBS += -L$(OSMAND_ROOT_DIRECTORY)/binaries/qnx/x86/Release
+  }
 }
 
 LIBS += \

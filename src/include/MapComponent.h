@@ -3,6 +3,11 @@
 #include <QtQuick/QQuickItem>
 #include <OsmAndCore/Map/IMapRenderer.h>
 
+#ifdef OSMAND_OPENGLES2_RENDERER_SUPPORTED
+#include "EGL/egl.h"
+#endif
+
+
 class QOpenGLContext;
 class GestureRecognizer;
 
@@ -12,7 +17,13 @@ class MapComponent : public QQuickItem {
   bool _initialized;
   OsmAndCfgMap *_config;
   std::shared_ptr<OsmAnd::IMapRenderer> _renderer;
+
+#if defined(OSMAND_OPENGL_RENDERER_SUPPORTED)
   QOpenGLContext *_context;
+#elif defined(OSMAND_OPENGLES2_RENDERER_SUPPORTED)
+  EGLContext _context;
+#endif
+
   GestureRecognizer *_recognizer;
   double _dotsPerCm;
 
@@ -52,6 +63,7 @@ public slots:
   void pinch(int deltaX, int deltaY, double scale, double angleChanged);
   void drag3f(int delta);  
   void paint();
+  void resized();
   
   void updateCfg();
   void zoomIn();

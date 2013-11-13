@@ -1,0 +1,135 @@
+<HTML>
+<HEAD>
+</HEAD>
+<BODY>
+How to build OsmAnd Native for Blackberry 10 OS.
+
+<p>1. Common issues</p>
+<p>OsmAndCore library uses C++11 standard, which not officially supported by Blackberry now, but NDK contains GNU C++ compiler version 4.6.3 with partially C++11 support. For enabling C++11 for your code you must tell compiler use this standard (-std=c++0x or -std=gnu++0x) and switch to GNU standard C++ library (-Y _gpp). By default, NDK uses another C++ library - dinkum, which does not have a lot of C++11 functions.</p>
+
+<p>2. Build Qt5 from source.</p>
+<p>For building Qt5 use this instructions: <a href="http://qt-project.org/wiki/Building-Qt5-for-Blackberry">Building-Qt5-for-Blackberry</a>. Before building you must configure Qt for using GNU C++ library instead of dinkum. For this purpose, you can patch this files:</p>
+<p>for device: qtbase/mkspecs/blackberry-armv7le-qcc/qmake.conf<br>
+for emulator: qtbase/mkspecs/blackberry-x86-qcc/qmake.conf</p>
+below, you can see pathing examples:
+<pre class="diff" style="font-family:monospace;"><span style="color: #888822;">--- original/qtbase/mkspecs/blackberry-armv7le-qcc/qmake.conf</span>
+<span style="color: #888822;">+++ patched/qtbase/mkspecs/blackberry-armv7le-qcc/qmake.conf</span>
+<span style="color: #440088;">@@ -15,8 +15,8 @@</span>
+     QMAKE_CFLAGS += -fstack-protector -fstack-protector-all
+ <span style="">&#125;</span>
+&nbsp;
+<span style="color: #991111;">-QMAKE_CFLAGS += -mcpu=cortex-a9 -mtune=cortex-a9 -mthumb -D_FORTIFY_SOURCE=2</span>
+<span style="color: #991111;">-</span>
+<span style="color: #00b000;">+QMAKE_CFLAGS += -mcpu=cortex-a9 -mtune=cortex-a9 -mthumb -D_FORTIFY_SOURCE=2 -Y _gpp</span>
+<span style="color: #00b000;">+QMAKE_LFLAGS += -Y _gpp</span>
+ QMAKE_LFLAGS_SHLIB += -Wl,-z,relro -Wl,-z,now
+&nbsp;
+ include<span style="">&#40;</span>../common/qcc-base-qnx-armv7le.conf<span style="">&#41;</span></pre>
+<pre class="diff" style="font-family:monospace;"><span style="color: #888822;">--- original/qtbase/mkspecs/blackberry-x86-qcc/qmake.conf</span>
+<span style="color: #888822;">+++ patched/qtbase/mkspecs/blackberry-x86-qcc/qmake.conf</span>
+<span style="color: #440088;">@@ -15,6 +15,8 @@</span>
+     QMAKE_CFLAGS += -fstack-protector -fstack-protector-all
+ <span style="">&#125;</span>
+&nbsp;
+<span style="color: #00b000;">+QMAKE_CFLAGS +=  -Y _gpp</span>
+<span style="color: #00b000;">+QMAKE_LFLAGS += -Y _gpp</span>
+ QMAKE_LFLAGS_SHLIB += -Wl,-z,relro -Wl,-z,now
+&nbsp;
+ include<span style="">&#40;</span>../common/qcc-base-qnx-x86.conf<span style="">&#41;</span>
+&nbsp;</pre>
+<p>If you want build Qt5 shared libraries, you can't link your libQt5xxxx.so with some Blackberry NDK libraries, which uses dinkum, such as libicuuc.so. See fragment of readelf utility output:</p>
+<p>readelf -a $QNX_TARGET/armle-v7/usr/lib/libicuuc.so</p>
+<pre>
+...
+
+Dynamic section at offset 0xe4f18 contains 25 entries:
+  Tag        Type                         Name/Value
+ 0x00000001 (NEEDED)                     Shared library: [libicudata.so.49]
+ 0x00000001 (NEEDED)                     Shared library: [libm.so.2]
+ 0x00000001 (NEEDED)                     Shared library: <b>[libcpp-ne.so.4] <--- dinkum library</b>
+ 0x00000001 (NEEDED)                     Shared library: [libc.so.3]
+ 0x0000000e (SONAME)                     Library soname: [libicuuc.so.49]
+ 0x0000000c (INIT)                       0x2f35c
+ 0x0000000d (FINI)                       0xa79f8
+ 0x00000019 (INIT_ARRAY)                 0xdd9a8
+ 0x0000001b (INIT_ARRAYSZ)               4 (bytes)
+ 0x0000001a (FINI_ARRAY)                 0xdd9ac
+ 0x0000001c (FINI_ARRAYSZ)               4 (bytes)
+ 0x6ffffef5 (GNU_HASH)                   0x114
+ 0x00000005 (STRTAB)                     0xebac
+
+...
+</pre>
+<p>It's not possibly to use two standard C++ libraries in one application. Best workaroud - linking Qt5 with static version of icuuc library. You can patch tools.pri file:</p>
+<pre class="diff" style="font-family:monospace;"><span style="color: #888822;">--- original/qtbase/src/corelib/tools/tools.pri</span>
+<span style="color: #888822;">+++ patched/qtbase/src/corelib/tools/tools.pri</span>
+<span style="color: #440088;">@@ -139,7 +139,7 @@</span>
+             LIBS_PRIVATE += -licuin -licuuc
+         <span style="">&#125;</span>
+     <span style="">&#125;</span> else <span style="">&#123;</span>
+<span style="color: #991111;">-        LIBS_PRIVATE += -licui18n -licuuc</span>
+<span style="color: #00b000;">+        LIBS_PRIVATE += -Bstatic -licui18n -licuuc -Bdynamic -licudata</span>
+     <span style="">&#125;</span>
+ <span style="">&#125;</span>
+&nbsp;</pre>
+
+<p>(See information about -Bstatic and -Bdynamic qcc command line flags <a href="http://developer.blackberry.com/native/documentation/core/com.qnx.doc.neutrino.prog/topic/devel_linkingyour.html">here</a>)</p>
+
+<p>After patching you can follow instructions from <a href="http://qt-project.org/wiki/Building-Qt5-for-Blackberry">qt-project</a> site. Configure command examples:</p>
+<p>./configure -prefix /PATH/TO/QT5(device) -xplatform blackberry-armle-v7-qcc -opengl es2 -nomake examples -nomake tests  -opensource -confirm-license -release</p>
+<p>./configure -prefix /PATH/TO/QT5(simulator) -xplatform blackberry-x86-qcc -opengl es2 -nomake examples -nomake tests  -opensource -confirm-license -release</p>
+<p>Needed directories to build from:</p>
+<ul>
+<li>qtbase
+<li>qtjsbackend
+<li>qtdeclarative
+<li>qtsensors
+</ul>
+<p>3. Building OsmAndCore library</p>
+<ul>
+<li>download OsmAndCore sources from official github repository:
+<pre>
+git clone https://github.com/osmandapp/OsmAnd-core core
+git clone https://github.com/osmandapp/OsmAnd-build build
+git clone https://github.com/osmandapp/OsmAnd-resources resources
+
+<b>Directory renaming (from OsmAnd-core to core and others) is neccessary!</b>
+</pre>
+<li>download external dependencies:
+<pre>
+cd core/externals
+./configure.sh
+</pre>
+<p>note: before configuring you can remove directories qtbase-* from externals, it prevents downloading non-needed Qt5 sources</p>
+<li>set environment variables:
+<pre>
+source /PATH/TO/BB/NDK/bbndk-env.sh
+export OSMAND_EXTERNAL_QT=/PATH/TO/QT5(device or simulator)/PREFIX
+</pre>
+<li>configure OsmAndCore:
+<pre>
+cd build
+./device(or simulator)-blackberry10.sh
+</pre>
+<li>build OsmAndCore
+<pre>
+cd baked/device(or simulator)-blackberry10-gcc.makefile
+make
+</pre>
+</ul>
+<p>4. Building OsmAnd native client</p>
+<p>4.1 Using CMake</p>
+<p>4.2 Using Qt Creator</p>
+<ul>
+<li><p>Configure Qt Creator. See this pages: <a href="http://qt-project.org/wiki/Setting-up-Qt-Creator-for-BlackBerry-and-QNX">Setting-up-Qt-Creator-for-BlackBerry-and-QNX</a> and <a href="http://qt-project.org/wiki/Qt-on-BlackBerry-devices">Qt-on-BlackBerry-devices</a></p>
+<p>Now, bar descriptor file configured to use shared Qt5 libraries, you must deploy it separately from OsmAnd application. See instructions here: <a href="http://qt-project.org/wiki/Deploying_Qt_to_a_central_place_on_Blackberry_devices">Deploying_Qt_to_a_central_place_on_Blackberry_devices</a></p>
+<li>setting environment variables:
+<pre>
+source /PATH/TO/BB/NDK/bbndk-env.sh
+export OSMAND_ROOT_DIRECTORY=/PATH/TO/OSMAND/ROOT/DIRECTORY
+</pre>
+<p>/PATH/TO/OSMAND/ROOT/DIRECTORY must contains 'core', 'build', 'baked' and 'binaries' directories, see above</p>
+<li>lauch Qt Creator (with environment variables configured at last step), open project file src/blackberry10/OsmAnd-native.pro, and build application
+</ul>
+</BODY>
+</HTML> 
